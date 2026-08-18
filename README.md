@@ -13,7 +13,7 @@ percentage for every result.
 
 ### 🌐 Live Demo
 
-**[https://ai-travel-recommendation-system.onrender.com/](https://ai-travel-recommendation-system.onrender.com/recommend)**
+**[https://ai-travel-recommendation-system.onrender.com](https://ai-travel-recommendation-system.onrender.com)**
 
 > Hosted on Render's free tier — the app may take up to 50 seconds to wake up
 > on the first request after a period of inactivity.
