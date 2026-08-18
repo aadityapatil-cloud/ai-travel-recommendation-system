@@ -11,6 +11,13 @@ percentage for every result.
 ![scikit--learn](https://img.shields.io/badge/scikit--learn-1.5-orange)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple)
 
+### 🌐 Live Demo
+
+**[https://ai-travel-recommendation-system.onrender.com/recommend](https://ai-travel-recommendation-system.onrender.com/recommend)**
+
+> Hosted on Render's free tier — the app may take up to 50 seconds to wake up
+> on the first request after a period of inactivity.
+
 ---
 
 ## ✨ Features
@@ -97,6 +104,8 @@ http://127.0.0.1:5000
 
 That's it — no manual database setup needed. Fully VS Code compatible.
 
+Prefer not to install anything locally? Use the live demo linked above instead.
+
 ---
 
 ## 🧠 How the Recommendation Engine Works
@@ -168,6 +177,7 @@ semantically related activity text, not just exact string matches.
 | Backend           | Python 3, Flask, REST API                              |
 | Database          | SQLite (`sqlite3`)                                      |
 | Data Science      | pandas, NumPy, scikit-learn (`TfidfVectorizer`, `cosine_similarity`) |
+| Deployment        | Docker + Render                                         |
 
 ---
 
