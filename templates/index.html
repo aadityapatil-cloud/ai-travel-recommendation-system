@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas AI — Smart Tour Recommendations</title>
+<meta name="description" content="AI-powered tour recommendation system that matches you to your perfect destination.">
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<!-- App styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar navbar-expand-lg navbar-atlas sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <i class="fa-solid fa-compass brand-mark"></i> Atlas<span class="text-mono" style="font-weight:400;">AI</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" style="border-color: rgba(255,255,255,0.3);">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item"><a class="nav-link active" href="/">Plan a Trip</a></li>
+        <li class="nav-item"><a class="nav-link" href="#how-it-works">How it Works</a></li>
+        <li class="nav-item ms-lg-2">
+          <a class="btn-wishlist-nav" href="#" id="openWishlistNav">
+            <i class="fa-solid fa-heart"></i> Wishlist <span class="text-mono" id="wishlistCountNav">0</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <div class="eyebrow">AI-Powered Recommendation Engine</div>
+        <h1>Your next journey, <em>calculated</em>.</h1>
+        <p class="lead">Tell Atlas AI how you love to travel — budget, style, season, activities — and our content-based recommendation engine matches you to real Indian destinations with a transparent match score.</p>
+
+        <div class="hero-stats">
+          <div>
+            <div class="stat-num">32</div>
+            <div class="stat-label">Destinations</div>
+          </div>
+          <div>
+            <div class="stat-num">7</div>
+            <div class="stat-label">Match Criteria</div>
+          </div>
+          <div>
+            <div class="stat-num">TF-IDF</div>
+            <div class="stat-label">+ Cosine Similarity</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="route-path-wrap">
+          <svg class="route-svg" viewBox="0 0 420 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path class="route-line" d="M30,220 C120,60 180,240 260,110 S 380,40 400,40" />
+            <circle class="route-pin" cx="30" cy="220" r="6"></circle>
+            <circle class="route-dot" cx="400" cy="40" r="7"></circle>
+            <text x="18" y="245" fill="#FBF7EF" font-family="IBM Plex Mono" font-size="11" opacity="0.7">START</text>
+            <text x="368" y="26" fill="#F0B75C" font-family="IBM Plex Mono" font-size="11">MATCH</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PREFERENCE FORM ================= -->
+<section class="form-section">
+  <div class="container">
+    <div class="pref-card fade-in-up">
+      <span class="section-tag">Step 1 of 1</span>
+      <h2 class="mb-1" style="font-size:1.7rem;">Tell us about your ideal trip</h2>
+      <p class="text-secondary mb-4" style="font-size:0.92rem;">The more you share, the sharper your AI match score.</p>
+
+      {% if errors and errors.server %}
+      <div class="alert alert-danger">{{ errors.server }}</div>
+      {% endif %}
+
+      <form id="prefForm" action="/recommend" method="POST" novalidate>
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label" for="preferred_location">Preferred Location <span class="text-secondary fw-normal">(region or state)</span></label>
+            <input type="text" class="form-control {{ 'is-invalid' if errors and errors.preferred_location }}" id="preferred_location" name="preferred_location"
+              list="locationList" placeholder="e.g. North India, Kerala, Any"
+              value="{{ form_data.preferred_location if form_data else '' }}">
+            <datalist id="locationList">
+              {% for r in regions %}<option value="{{ r }}">{% endfor %}
+            </datalist>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="category">Destination Category <span class="text-danger">*</span></label>
+            <select class="form-select {{ 'is-invalid' if errors and errors.category }}" id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="Any">Any / Surprise me</option>
+              {% for c in categories %}
+              <option value="{{ c }}" {{ 'selected' if form_data and form_data.category==c }}>{{ c }}</option>
+              {% endfor %}
+            </select>
+            {% if errors and errors.category %}<div class="invalid-feedback d-block">{{ errors.category }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="budget">Total Trip Budget (₹) <span class="text-danger">*</span></label>
+            <input type="number" min="1" class="form-control {{ 'is-invalid' if errors and errors.budget }}" id="budget" name="budget"
+              placeholder="e.g. 25000" value="{{ form_data.budget if form_data else '' }}" required>
+            {% if errors and errors.budget %}<div class="invalid-feedback d-block">{{ errors.budget }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="travel_days">Travel Days <span class="text-danger">*</span></label>
+            <input type="number" min="1" max="30" class="form-control {{ 'is-invalid' if errors and errors.travel_days }}" id="travel_days" name="travel_days"
+              placeholder="e.g. 5" value="{{ form_data.travel_days if form_data else '' }}" required>
+            {% if errors and errors.travel_days %}<div class="invalid-feedback d-block">{{ errors.travel_days }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="travelers">Number of Travelers <span class="text-danger">*</span></label>
+            <input type="number" min="1" max="20" class="form-control {{ 'is-invalid' if errors and errors.travelers }}" id="travelers" name="travelers"
+              placeholder="e.g. 2" value="{{ form_data.travelers if form_data else '' }}" required>
+            {% if errors and errors.travelers %}<div class="invalid-feedback d-block">{{ errors.travelers }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="travel_season">Travel Season</label>
+            <select class="form-select" id="travel_season" name="travel_season">
+              <option value="Any">Any</option>
+              {% for s in seasons %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="travel_style">Travel Style</label>
+            <select class="form-select" id="travel_style" name="travel_style">
+              <option value="Any">Any</option>
+              {% for s in styles %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label" for="food_preference">Food Preference</label>
+            <select class="form-select" id="food_preference" name="food_preference">
+              <option value="Any">Any</option>
+              {% for f in foods %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="accommodation">Accommodation Preference</label>
+            <select class="form-select" id="accommodation" name="accommodation">
+              <option value="Any">Any</option>
+              {% for a in accoms %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Activities <span class="text-secondary fw-normal">(pick as many as you like)</span></label>
+            <div class="chip-group">
+              {% for act in activities %}
+              <input type="checkbox" class="chip-check" id="act_{{ loop.index }}" name="activities" value="{{ act }}">
+              <label class="chip-label" for="act_{{ loop.index }}">{{ act }}</label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="col-12 mt-4 d-flex align-items-center gap-3">
+            <button type="submit" class="btn-atlas" id="submitBtn">
+              <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Get My Recommendations
+            </button>
+            <span class="text-secondary" style="font-size:0.85rem;">Takes about 5 seconds</span>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how-it-works" class="container py-5">
+  <div class="text-center mb-5">
+    <span class="pref-card-tag section-tag">The Engine</span>
+    <h2 style="font-size:1.9rem;">How Atlas AI scores every destination</h2>
+    <p class="text-secondary mx-auto" style="max-width:560px;">A content-based recommender built with TF-IDF vectorization and cosine similarity, blended with rule-based preference scoring across 7 weighted criteria.</p>
+  </div>
+  <div class="row g-3 text-center">
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Budget Match</h6><div class="display-font" style="font-size:1.8rem;">30%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Category Match</h6><div class="display-font" style="font-size:1.8rem;">25%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Activities Match</h6><div class="display-font" style="font-size:1.8rem;">20%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Location Match</h6><div class="display-font" style="font-size:1.8rem;">10%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Travel Style</h6><div class="display-font" style="font-size:1.8rem;">5%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Season Match</h6><div class="display-font" style="font-size:1.8rem;">5%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100"><h6>Food & Stay</h6><div class="display-font" style="font-size:1.8rem;">5%</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="chart-card h-100" style="background:var(--ink-900); color:var(--paper-50);"><h6 style="color:var(--gold-400);">Total</h6><div class="display-font" style="font-size:1.8rem; color:var(--paper-50);">100%</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer-atlas">
+  <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+    <div><i class="fa-solid fa-compass" style="color:var(--gold-500);"></i> Atlas AI — Tour Recommendation System</div>
+    <div style="font-size:0.82rem;">B.Sc. Data Science Project · Built with Flask, scikit-learn & Bootstrap 5</div>
+  </div>
+</footer>
+
+<!-- Wishlist off-canvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="wishlistPanel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title"><i class="fa-solid fa-heart" style="color:var(--coral-500);"></i> My Wishlist</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="wishlistPanelBody">
+    <p class="text-secondary">Loading...</p>
+  </div>
+</div>
+
+<div class="toast-atlas" id="appToast"><i class="fa-solid fa-circle-check"></i><span id="appToastMsg"></span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    Atlas.initWishlistNav();
+    Atlas.attachFormValidation('prefForm');
+  });
+</script>
+</body>
+</html>
